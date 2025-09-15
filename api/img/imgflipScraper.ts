@@ -1,8 +1,12 @@
 import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts'
-import type { SearchResult, MemeSearchOptions } from './types.ts'
+import type { MemeSearchOptions, SearchResult } from './types.ts'
 import { extractMemeLinks, parseMeme } from './memeParser.ts'
 
-function buildSearchUrl(query: string, page: number, options: MemeSearchOptions): string {
+function buildSearchUrl(
+  query: string,
+  page: number,
+  options: MemeSearchOptions,
+): string {
   const baseUrl = 'https://imgflip.com/memesearch'
   const params = new URLSearchParams()
 
@@ -35,7 +39,7 @@ function hasNextPageIndicator(doc: Document): boolean {
 export async function searchMemes(
   query: string,
   page: number = 1,
-  options: MemeSearchOptions = {}
+  options: MemeSearchOptions = {},
 ): Promise<SearchResult> {
   const searchUrl = buildSearchUrl(query, page, options)
   const doc = await fetchSearchPage(searchUrl)
@@ -45,7 +49,7 @@ export async function searchMemes(
       memes: [],
       currentPage: page,
       hasNextPage: false,
-      totalFound: 0
+      totalFound: 0,
     }
   }
 
@@ -56,7 +60,9 @@ export async function searchMemes(
     const memeResult = await parseMeme(link)
     if (memeResult) {
       memes.push(memeResult)
-      console.log(`Processed: ${memeResult.title} => ${memeResult.blankTemplates.length} template(s)`)
+      console.log(
+        `Processed: ${memeResult.title} => ${memeResult.blankTemplates.length} template(s)`,
+      )
     }
   }
 
@@ -64,14 +70,14 @@ export async function searchMemes(
     memes,
     currentPage: page,
     hasNextPage: hasNextPageIndicator(doc),
-    totalFound: memes.length
+    totalFound: memes.length,
   }
 }
 
-export async function getNextPage(
+export function getNextPage(
   query: string,
   currentPage: number,
-  options: MemeSearchOptions = {}
+  options: MemeSearchOptions = {},
 ): Promise<SearchResult> {
   return searchMemes(query, currentPage + 1, options)
 }

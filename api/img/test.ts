@@ -1,4 +1,4 @@
-import { searchMemes, getNextPage } from './imgflipScraper.ts'
+import { getNextPage, searchMemes } from './imgflipScraper.ts'
 
 async function testScraper() {
   console.log('Testing Imgflip scraper...')
@@ -6,7 +6,9 @@ async function testScraper() {
   // Test basic search
   console.log('\n--- Testing basic search ---')
   const results = await searchMemes('dragon ball', 1, { nsfw: true })
-  console.log(`Found ${results.totalFound} memes on page ${results.currentPage}`)
+  console.log(
+    `Found ${results.totalFound} memes on page ${results.currentPage}`,
+  )
   console.log(`Has next page: ${results.hasNextPage}`)
 
   if (results.memes.length > 0) {
@@ -19,8 +21,12 @@ async function testScraper() {
   // Test pagination if available
   if (results.hasNextPage) {
     console.log('\n--- Testing pagination ---')
-    const nextPage = await getNextPage('dragon ball', results.currentPage, { nsfw: true })
-    console.log(`Page ${nextPage.currentPage} found ${nextPage.totalFound} memes`)
+    const nextPage = await getNextPage('dragon ball', results.currentPage, {
+      nsfw: true,
+    })
+    console.log(
+      `Page ${nextPage.currentPage} found ${nextPage.totalFound} memes`,
+    )
   }
 
   console.log('\n--- Test completed ---')

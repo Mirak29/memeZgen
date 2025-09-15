@@ -38,6 +38,7 @@
       "dependencies": [
         "npm:@preact/preset-vite@^2.10.2",
         "npm:@tailwindcss/cli@^4.1.13",
+        "npm:@tailwindcss/vite@^4.1.13",
         "npm:daisyui@^5.1.12",
         "npm:eslint-config-preact@2",
         "npm:eslint@^9.35.0",

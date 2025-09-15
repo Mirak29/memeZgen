@@ -1,5 +1,5 @@
 import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts'
-import type { MemeResult, BlankMemeTemplate } from './types.ts'
+import type { BlankMemeTemplate, MemeResult } from './types.ts'
 
 function normalizeUrl(url: string): string {
   if (url.startsWith('//')) return 'https:' + url
@@ -23,7 +23,7 @@ function extractBlankTemplates(doc: Document): BlankMemeTemplate[] {
 
     templates.push({
       url: normalizeUrl(src),
-      type: 'image'
+      type: 'image',
     })
   }
 
@@ -35,7 +35,7 @@ function extractBlankTemplates(doc: Document): BlankMemeTemplate[] {
       if (src) {
         templates.push({
           url: normalizeUrl(src),
-          type: 'video'
+          type: 'video',
         })
       }
     }
@@ -65,7 +65,7 @@ export async function parseMeme(memeUrl: string): Promise<MemeResult | null> {
     return {
       title,
       memeUrl,
-      blankTemplates
+      blankTemplates,
     }
   } catch {
     return null

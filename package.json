@@ -1,28 +1,33 @@
 {
-	"private": true,
-	"type": "module",
-	"scripts": {
-		"dev": "vite",
-		"build": "vite build",
-		"build:css": "npx @tailwindcss/cli -i app.css -o public/output.css",
-		"preview": "vite preview"
-	},
-	"dependencies": {
-		"@tailwindcss/cli": "^4.1.13",
-		"daisyui": "^5.1.12",
-		"preact": "^10.26.9",
-		"preact-iso": "^2.10.0",
-		"preact-render-to-string": "^6.6.1",
-		"tailwindcss": "^4.1.13"
-	},
-	"devDependencies": {
-		"@preact/preset-vite": "^2.10.2",
-		"eslint": "^9.35.0",
-		"eslint-config-preact": "^2.0.0",
-		"typescript": "^5.9.2",
-		"vite": "^7.0.4"
-	},
-	"eslintConfig": {
-		"extends": "preact"
-	}
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:css": "npx @tailwindcss/cli -i src/style.css -o public/output.css",
+    "preview": "vite preview",
+    "lint": "deno lint",
+    "check": "deno check src/index.tsx",
+    "fmt": "deno fmt",
+    "fmt:check": "deno fmt --check"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.1.13",
+    "daisyui": "^5.1.12",
+    "preact": "^10.26.9",
+    "preact-iso": "^2.10.0",
+    "preact-render-to-string": "^6.6.1",
+    "tailwindcss": "^4.1.13"
+  },
+  "devDependencies": {
+    "@preact/preset-vite": "^2.10.2",
+    "@tailwindcss/vite": "^4.1.13",
+    "eslint": "^9.35.0",
+    "eslint-config-preact": "^2.0.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.4"
+  },
+  "eslintConfig": {
+    "extends": "preact"
+  }
 }
