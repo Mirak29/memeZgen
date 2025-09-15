@@ -13,27 +13,33 @@ export function Home() {
   }
 
   return (
-    <div class='min-h-screen bg-base-300'>
-      <div class='container mx-auto px-4'>
-        <div class='flex flex-col items-center justify-center min-h-[60vh] text-center'>
-          <h1 class='text-6xl md:text-7xl font-bold text-base-content mb-4'>
+    <div class='w-full'>
+      {/* Hero Section */}
+      <main class='flex-grow flex flex-col items-center justify-center text-center py-12 sm:py-20'>
+        <div class='mb-12'>
+          <h1 class='text-4xl sm:text-6xl font-light text-white mb-4'>
             Generate memes
           </h1>
-          <h2 class='text-4xl md:text-5xl font-bold text-primary mb-12'>
-            easily
-          </h2>
-
-          <div class='w-full max-w-lg'>
-            <SearchBar onSearch={handleSearch} isLoading={isSearching} />
-          </div>
+          <p class='text-xl sm:text-2xl font-normal text-cyan-100'>
+            Simply and beautifully
+          </p>
         </div>
 
-        {searchQuery && (
-          <div class='pb-8'>
-            <MemeGallery searchQuery={searchQuery} />
-          </div>
-        )}
-      </div>
+        <div class='relative w-full max-w-md'>
+          <SearchBar onSearch={handleSearch} isLoading={isSearching} />
+        </div>
+      </main>
+
+      {/* Meme Gallery */}
+      {searchQuery ? (
+        <div class='pb-8'>
+          <MemeGallery searchQuery={searchQuery} />
+        </div>
+      ) : (
+        <div class='flex items-center justify-center min-h-[200px] text-center'>
+          <p class='text-lg text-white/70'>Search for meme templates to get started</p>
+        </div>
+      )}
     </div>
   )
 }

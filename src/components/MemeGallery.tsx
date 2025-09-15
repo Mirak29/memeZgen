@@ -121,7 +121,10 @@ export function MemeGallery({ searchQuery }: MemeGalleryProps) {
         </div>
       )}
 
-      <div class='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+      <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full'>
+        {/* Upload card */}
+        <UploadCard />
+
         {results?.memes.map((meme, index) => (
           <MemeCard key={`${meme.memeUrl}-${index}`} meme={meme} />
         ))}
@@ -147,35 +150,51 @@ function MemeCard({ meme }: { meme: MemeResult }) {
   const firstTemplate = meme.blankTemplates[0]
 
   return (
-    <div class='card bg-base-100 shadow-xl hover:shadow-2xl transition-shadow'>
-      <figure class='aspect-square'>
-        {firstTemplate
-          ? (
-            <img
-              src={firstTemplate.url}
-              alt={meme.title}
-              class='w-full h-full object-cover'
-              loading='lazy'
-            />
-          )
-          : (
-            <div class='w-full h-full bg-base-200 flex items-center justify-center'>
-              <span class='text-base-content/50'>No image</span>
-            </div>
-          )}
-      </figure>
-      <div class='card-body p-4'>
-        <h2 class='card-title text-sm leading-tight'>{meme.title}</h2>
-        <div class='card-actions justify-end mt-2'>
-          <a
-            href={`/editor?template=${
-              encodeURIComponent(firstTemplate?.url || '')
-            }`}
-            class='btn btn-primary btn-sm'
-          >
-            Edit
-          </a>
-        </div>
+    <div
+      class='bg-white rounded-lg overflow-hidden shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-300 transition-all duration-200 cursor-pointer w-full'
+      onClick={() => {
+        if (firstTemplate?.url) {
+          window.location.href = `/editor?template=${encodeURIComponent(firstTemplate.url)}`
+        }
+      }}
+    >
+      {firstTemplate
+        ? (
+          <img
+            src={firstTemplate.url}
+            alt={meme.title}
+            class='w-full h-48 object-cover'
+            loading='lazy'
+          />
+        )
+        : (
+          <div class='w-full h-48 bg-slate-100 flex items-center justify-center'>
+            <span class='text-slate-400'>No image</span>
+          </div>
+        )}
+
+      <div class='p-4'>
+        <h3 class='text-sm font-medium text-slate-700 text-center leading-tight'>
+          {meme.title}
+        </h3>
+      </div>
+    </div>
+  )
+}
+
+function UploadCard() {
+  return (
+    <div
+      class='bg-white rounded-lg border border-dashed border-slate-300 hover:border-cyan-400 transition-colors cursor-pointer flex flex-col w-full items-center justify-center min-h-[280px] group'
+      onClick={() => {
+        window.location.href = '/editor'
+      }}
+    >
+      <div class='flex flex-col items-center gap-3 text-slate-400 group-hover:text-cyan-600 transition-colors'>
+        <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+        </svg>
+        <span class='font-medium text-sm text-center'>Upload Your Image</span>
       </div>
     </div>
   )
@@ -183,16 +202,10 @@ function MemeCard({ meme }: { meme: MemeResult }) {
 
 function SkeletonCard() {
   return (
-    <div class='card bg-base-100 shadow-xl'>
-      <figure class='aspect-square'>
-        <div class='skeleton w-full h-full'></div>
-      </figure>
-      <div class='card-body p-4'>
-        <div class='skeleton h-4 w-full mb-2'></div>
-        <div class='skeleton h-4 w-3/4'></div>
-        <div class='card-actions justify-end mt-2'>
-          <div class='skeleton h-8 w-16'></div>
-        </div>
+    <div class='bg-white rounded-lg border border-slate-200 w-full'>
+      <div class='w-full h-48 bg-slate-100 animate-pulse'></div>
+      <div class='p-4'>
+        <div class='h-4 bg-slate-200 rounded animate-pulse'></div>
       </div>
     </div>
   )

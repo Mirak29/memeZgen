@@ -1,83 +1,87 @@
 import { DOMParser } from 'https://deno.land/x/deno_dom/deno-dom-wasm.ts'
-import type { MemeSearchOptions, SearchResult } from './types.ts'
-import { extractMemeLinks, parseMeme } from './memeParser.ts'
 
-function buildSearchUrl(
-  query: string,
-  page: number,
-  options: MemeSearchOptions,
-): string {
-  const baseUrl = 'https://imgflip.com/memesearch'
-  const params = new URLSearchParams()
-
-  params.set('q', query)
-  if (page > 1) params.set('page', page.toString())
-  if (options.nsfw) params.set('nsfw', 'on')
-
-  return `${baseUrl}?${params.toString()}`
+export type MemeResult = {
+  title: string
+  memeUrl: string
+  blankImg: string
 }
 
-async function fetchSearchPage(url: string): Promise<Document | null> {
-  try {
-    const response = await fetch(url)
-    const html = await response.text()
-    return new DOMParser().parseFromString(html, 'text/html')
-  } catch {
-    return null
-  }
-}
+export async function searchMemes(query: string, page = 1): Promise<MemeResult[]> {
+  const searchUrl = `https://imgflip.com/memesearch?q=${query}&nsfw=on&page=${page}`
 
-function hasNextPageIndicator(doc: Document): boolean {
-  const nextButtons = doc.querySelectorAll('a')
-  for (const button of nextButtons) {
-    const text = button.textContent?.toLowerCase()
-    if (text?.includes('next') || text?.includes('→')) return true
-  }
-  return false
-}
+  // 1. Fetch search page
+  const res = await fetch(searchUrl)
+  const html = await res.text()
+  const doc = new DOMParser().parseFromString(html, 'text/html')
+  if (!doc) throw new Error('Failed to parse page')
 
-export async function searchMemes(
-  query: string,
-  page: number = 1,
-  options: MemeSearchOptions = {},
-): Promise<SearchResult> {
-  const searchUrl = buildSearchUrl(query, page, options)
-  const doc = await fetchSearchPage(searchUrl)
-
-  if (!doc) {
-    return {
-      memes: [],
-      currentPage: page,
-      hasNextPage: false,
-      totalFound: 0,
+  // 2. Extract all meme links
+  const memeLinks: string[] = []
+  for (const a of doc.querySelectorAll('a')) {
+    const href = a.getAttribute('href')
+    if (href && href.startsWith('/meme/')) {
+      const fullLink = 'https://imgflip.com' + href
+      if (!memeLinks.includes(fullLink)) memeLinks.push(fullLink)
     }
   }
 
-  const memeLinks = extractMemeLinks(doc)
-  const memes = []
+  console.log(`Found ${memeLinks.length} memes`)
+
+  // 3. For each link, get title and blank template image
+  const memes: MemeResult[] = []
 
   for (const link of memeLinks) {
-    const memeResult = await parseMeme(link)
-    if (memeResult) {
-      memes.push(memeResult)
-      console.log(
-        `Processed: ${memeResult.title} => ${memeResult.blankTemplates.length} template(s)`,
-      )
+    try {
+      const resMeme = await fetch(link)
+      const htmlMeme = await resMeme.text()
+      const docMeme = new DOMParser().parseFromString(htmlMeme, 'text/html')
+      if (!docMeme) continue
+
+      // Extract page title
+      const titleEl = docMeme.querySelector('title')
+      const title = titleEl ? titleEl.textContent.split(' - ')[0].trim() : 'Unknown'
+
+      // Find first image in <a class="meme-link"> containing "Blank Meme Template"
+      let blankImg = ''
+      const templateLinks = docMeme.querySelectorAll('a.meme-link')
+      for (const a of templateLinks) {
+        const titleAttr = a.getAttribute('title')
+        if (titleAttr && titleAttr.includes('Blank Meme Template')) {
+          const imgEl = a.querySelector('img')
+          if (imgEl) {
+            let src = imgEl.getAttribute('src')
+            if (src) {
+              if (src.startsWith('//')) src = 'https:' + src
+              blankImg = src
+              break
+            }
+          }
+        }
+      }
+
+      // If no image found, look for video
+      if (!blankImg) {
+        const source = docMeme.querySelector('video source')
+        if (source) {
+          let src = source.getAttribute('src')
+          if (src) {
+            if (src.startsWith('//')) src = 'https:' + src
+            blankImg = src
+          }
+        }
+      }
+
+      if (blankImg) {
+        if (!blankImg.startsWith('https')) {
+          blankImg = 'https://imgflip.com' + blankImg
+        }
+        memes.push({ title, memeUrl: link, blankImg })
+        console.log(`Processed: ${title} => image found`)
+      }
+    } catch (err) {
+      console.error('Error on link', link, err)
     }
   }
 
-  return {
-    memes,
-    currentPage: page,
-    hasNextPage: hasNextPageIndicator(doc),
-    totalFound: memes.length,
-  }
-}
-
-export function getNextPage(
-  query: string,
-  currentPage: number,
-  options: MemeSearchOptions = {},
-): Promise<SearchResult> {
-  return searchMemes(query, currentPage + 1, options)
+  return memes
 }

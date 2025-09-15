@@ -1,35 +1,11 @@
-import { getNextPage, searchMemes } from './imgflipScraper.ts'
+import { searchMemes } from './imgflipScraper.ts'
 
-async function testScraper() {
-  console.log('Testing Imgflip scraper...')
+console.log('=== Test Page 1 ===')
+const memes1 = await searchMemes('cat', 1)
+console.log(`Page 1: ${memes1.length} memes`)
+console.log(memes1.slice(0, 2))
 
-  // Test basic search
-  console.log('\n--- Testing basic search ---')
-  const results = await searchMemes('dragon ball', 1, { nsfw: true })
-  console.log(
-    `Found ${results.totalFound} memes on page ${results.currentPage}`,
-  )
-  console.log(`Has next page: ${results.hasNextPage}`)
-
-  if (results.memes.length > 0) {
-    const firstMeme = results.memes[0]
-    console.log(`First meme: "${firstMeme.title}"`)
-    console.log(`Templates: ${firstMeme.blankTemplates.length}`)
-    console.log(`URL: ${firstMeme.memeUrl}`)
-  }
-
-  // Test pagination if available
-  if (results.hasNextPage) {
-    console.log('\n--- Testing pagination ---')
-    const nextPage = await getNextPage('dragon ball', results.currentPage, {
-      nsfw: true,
-    })
-    console.log(
-      `Page ${nextPage.currentPage} found ${nextPage.totalFound} memes`,
-    )
-  }
-
-  console.log('\n--- Test completed ---')
-}
-
-testScraper().catch(console.error)
+console.log('\n=== Test Page 2 ===')
+const memes2 = await searchMemes('cat', 2)
+console.log(`Page 2: ${memes2.length} memes`)
+console.log(memes2.slice(0, 2))
