@@ -71,7 +71,15 @@ export function Editor() {
   }
 
   const updateText = (id: number, newText: string) => {
-    setTexts(texts.map((t) => (t.id === id ? { ...t, text: newText } : t)))
+    const updatedTexts = []
+    for (const t of texts) {
+      if (t.id === id) {
+        updatedTexts.push({ ...t, text: newText })
+      } else {
+        updatedTexts.push(t)
+      }
+    }
+    setTexts(updatedTexts)
   }
 
   const deleteText = (id: number) => {
@@ -81,6 +89,33 @@ export function Editor() {
   const openSettingsFor = (id: number) => {
     setEditingTextId(id)
     setShowSettings(true)
+  }
+
+  const handleUpload = () => {
+    fileInputRef.current?.click()
+  }
+
+  const closeSettings = () => {
+    setShowSettings(false)
+  }
+
+  const updateTextProperty = (id: number, property: keyof TextItem, value: any) => {
+    const updatedTexts = []
+    for (const t of texts) {
+      if (t.id === id) {
+        updatedTexts.push({ ...t, [property]: value })
+      } else {
+        updatedTexts.push(t)
+      }
+    }
+    setTexts(updatedTexts)
+  }
+
+  const handleDeleteAndClose = () => {
+    if (textToEdit) {
+      deleteText(textToEdit.id)
+      setShowSettings(false)
+    }
   }
 
   const downloadMeme = () => {
@@ -126,7 +161,7 @@ export function Editor() {
           {/* Upload image */}
           <button
             type='button'
-            onClick={() => fileInputRef.current?.click()}
+            onClick={handleUpload}
             class='btn bg-white border-slate-200 text-slate-700 hover:border-cyan-400 hover:bg-cyan-50'
           >
             <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -208,7 +243,7 @@ export function Editor() {
               <h3 class='text-xl font-bold text-slate-800'>Edit Text</h3>
               <button
                 type='button'
-                onClick={() => setShowSettings(false)}
+                onClick={closeSettings}
                 class='btn btn-ghost btn-sm text-slate-500 hover:text-slate-700'
               >
                 <svg class='w-5 h-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -228,6 +263,7 @@ export function Editor() {
                   max='100'
                   step='2'
                   value={textToEdit.fontSize}
+                  onChange={(e) => updateTextProperty(textToEdit.id, 'fontSize', parseInt((e.target as HTMLInputElement).value))}
                   class='range range-primary'
                 />
               </div>
@@ -239,16 +275,14 @@ export function Editor() {
                 <input
                   type='color'
                   value={textToEdit.color}
+                  onChange={(e) => updateTextProperty(textToEdit.id, 'color', (e.target as HTMLInputElement).value)}
                   class='input input-bordered w-full h-12'
                 />
               </div>
 
               <button
                 type='button'
-                onClick={() => {
-                  deleteText(textToEdit.id)
-                  setShowSettings(false)
-                }}
+                onClick={handleDeleteAndClose}
                 class='btn btn-error w-full'
               >
                 Delete Text
@@ -271,8 +305,12 @@ function DraggableText({ textItem, onDelete }: {
         return { top: '10%', left: '50%' }
       case 'bottom':
         return { top: '85%', left: '50%' }
-      default:
+      case 'center':
         return { top: '50%', left: '50%' }
+      default: {
+        const _: never = textItem.position
+        return { top: '50%', left: '50%' }
+      }
     }
   }
 
