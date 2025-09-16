@@ -7,16 +7,34 @@ type TextItem = {
   color: string
   fontFamily: string
   position: 'top' | 'bottom' | 'center'
+  x?: number
+  y?: number
 }
 
 export function Editor() {
+  const availableFonts = [
+    {
+      name: 'Impact',
+      value: 'Impact, Haettenschweiler, Arial Narrow Bold, sans-serif',
+    },
+    { name: 'Arial', value: 'Arial, sans-serif' },
+    { name: 'Comic Sans', value: 'Comic Sans MS, cursive, sans-serif' },
+    { name: 'Times New Roman', value: 'Times New Roman, Times, serif' },
+    { name: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+    { name: 'Georgia', value: 'Georgia, serif' },
+    { name: 'Courier New', value: 'Courier New, Courier, monospace' },
+    { name: 'Trebuchet MS', value: 'Trebuchet MS, sans-serif' },
+    { name: 'Lucida Console', value: 'Lucida Console, Monaco, monospace' },
+    { name: 'Tahoma', value: 'Tahoma, Geneva, sans-serif' },
+  ]
+
   const [texts, setTexts] = useState<TextItem[]>([
     {
       id: 1,
       text: 'Text Position 1',
       fontSize: 40,
       color: '#FFFFFF',
-      fontFamily: 'Impact',
+      fontFamily: 'Impact, Haettenschweiler, Arial Narrow Bold, sans-serif',
       position: 'top',
     },
     {
@@ -24,23 +42,47 @@ export function Editor() {
       text: 'Text Position 2',
       fontSize: 40,
       color: '#FFFFFF',
-      fontFamily: 'Impact',
+      fontFamily: 'Impact, Haettenschweiler, Arial Narrow Bold, sans-serif',
       position: 'bottom',
     },
   ])
   const [showSettings, setShowSettings] = useState(false)
   const [editingTextId, setEditingTextId] = useState<number | null>(null)
   const [imageSrc, setImageSrc] = useState<string | null>(null)
+  const [filename, setFilename] = useState('meme')
 
   const memeRef = useRef<HTMLDivElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
+  // Load saved data on mount
   useEffect(() => {
-    // Get template from URL params
-    const params = new URLSearchParams(window.location.search)
-    const template = params.get('template')
-    if (template) {
-      setImageSrc(decodeURIComponent(template))
+    try {
+      // Get template from URL params
+      const params = new URLSearchParams(globalThis.location.search)
+      const template = params.get('template')
+      if (template) {
+        setImageSrc(decodeURIComponent(template))
+      } else {
+        // Load from localStorage if no URL template
+        const savedImageSrc = localStorage.getItem('memeEditor_imageSrc')
+        if (savedImageSrc) {
+          setImageSrc(savedImageSrc)
+        }
+      }
+
+      // Load saved texts
+      const savedTexts = localStorage.getItem('memeEditor_texts')
+      if (savedTexts) {
+        setTexts(JSON.parse(savedTexts))
+      }
+
+      // Load saved filename
+      const savedFilename = localStorage.getItem('memeEditor_filename')
+      if (savedFilename) {
+        setFilename(savedFilename)
+      }
+    } catch (error) {
+      console.error('Error loading saved data:', error)
     }
   }, [])
 
@@ -50,24 +92,33 @@ export function Editor() {
     if (file) {
       const reader = new FileReader()
       reader.onload = (e) => {
-        setImageSrc(e.target?.result as string)
+        const imageSrc = e.target?.result as string
+        setImageSrc(imageSrc)
+        // Save to localStorage
+        localStorage.setItem('memeEditor_imageSrc', imageSrc)
       }
       reader.readAsDataURL(file)
     }
   }
 
   const addText = () => {
-    setTexts([
+    const newTexts: TextItem[] = [
       ...texts,
       {
         id: Date.now(),
         text: 'New Text',
         fontSize: 40,
         color: '#FFFFFF',
-        fontFamily: 'Impact',
-        position: 'center',
+        fontFamily: 'Impact, Haettenschweiler, Arial Narrow Bold, sans-serif',
+        position: 'center' as const,
       },
-    ])
+    ]
+    setTexts(newTexts)
+    saveTextsToStorage(newTexts)
+  }
+
+  const saveTextsToStorage = (newTexts: TextItem[]) => {
+    localStorage.setItem('memeEditor_texts', JSON.stringify(newTexts))
   }
 
   const updateText = (id: number, newText: string) => {
@@ -80,10 +131,13 @@ export function Editor() {
       }
     }
     setTexts(updatedTexts)
+    saveTextsToStorage(updatedTexts)
   }
 
   const deleteText = (id: number) => {
-    setTexts(texts.filter((t) => t.id !== id))
+    const updatedTexts = texts.filter((t) => t.id !== id)
+    setTexts(updatedTexts)
+    saveTextsToStorage(updatedTexts)
   }
 
   const openSettingsFor = (id: number) => {
@@ -99,10 +153,32 @@ export function Editor() {
     setShowSettings(false)
   }
 
+  const handleModalClick = (e: MouseEvent) => {
+    // Close if clicking on backdrop
+    if ((e.target as HTMLElement).classList.contains('modal-backdrop')) {
+      closeSettings()
+    }
+  }
+
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showSettings) {
+        closeSettings()
+      }
+    }
+
+    if (showSettings) {
+      document.addEventListener('keydown', handleEscape)
+      return () => {
+        document.removeEventListener('keydown', handleEscape)
+      }
+    }
+  }, [showSettings])
+
   const updateTextProperty = (
     id: number,
     property: keyof TextItem,
-    value: any,
+    value: string | number,
   ) => {
     const updatedTexts = []
     for (const t of texts) {
@@ -113,6 +189,20 @@ export function Editor() {
       }
     }
     setTexts(updatedTexts)
+    saveTextsToStorage(updatedTexts)
+  }
+
+  const updateTextPosition = (id: number, x: number, y: number) => {
+    const updatedTexts = []
+    for (const t of texts) {
+      if (t.id === id) {
+        updatedTexts.push({ ...t, x, y })
+      } else {
+        updatedTexts.push(t)
+      }
+    }
+    setTexts(updatedTexts)
+    saveTextsToStorage(updatedTexts)
   }
 
   const handleDeleteAndClose = () => {
@@ -122,9 +212,132 @@ export function Editor() {
     }
   }
 
-  const downloadMeme = () => {
-    // TODO: Implement canvas download
-    alert('Download feature coming soon!')
+  const generateMemeCanvas = (): Promise<HTMLCanvasElement> => {
+    return new Promise((resolve, reject) => {
+      if (!memeRef.current || !imageSrc) {
+        reject(new Error('Image or meme container not found.'))
+        return
+      }
+
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')!
+      const memeContainer = memeRef.current
+      const rect = memeContainer.getBoundingClientRect()
+      canvas.width = rect.width
+      canvas.height = rect.height
+
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      img.onload = () => {
+        const imageAspectRatio = img.naturalWidth / img.naturalHeight
+        const canvasAspectRatio = canvas.width / canvas.height
+        let renderWidth: number,
+          renderHeight: number,
+          offsetX: number,
+          offsetY: number
+
+        if (imageAspectRatio > canvasAspectRatio) {
+          renderWidth = canvas.width
+          renderHeight = canvas.width / imageAspectRatio
+          offsetX = 0
+          offsetY = (canvas.height - renderHeight) / 2
+        } else {
+          renderHeight = canvas.height
+          renderWidth = canvas.height * imageAspectRatio
+          offsetX = (canvas.width - renderWidth) / 2
+          offsetY = 0
+        }
+
+        ctx.fillStyle = 'black'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.drawImage(img, offsetX, offsetY, renderWidth, renderHeight)
+
+        for (const textItem of texts) {
+          // Use stored position or default position
+          let xPercent = textItem.x
+          let yPercent = textItem.y
+
+          if (xPercent === undefined || yPercent === undefined) {
+            // Use default position based on textItem.position
+            switch (textItem.position) {
+              case 'top':
+                xPercent = 50
+                yPercent = 10
+                break
+              case 'bottom':
+                xPercent = 50
+                yPercent = 85
+                break
+              case 'center':
+                xPercent = 50
+                yPercent = 50
+                break
+              default: {
+                const _: never = textItem.position
+                xPercent = 50
+                yPercent = 50
+                break
+              }
+            }
+          }
+
+          const x = (xPercent / 100) * canvas.width
+          const y = (yPercent / 100) * canvas.height
+
+          ctx.font = `${textItem.fontSize || 40}px ${textItem.fontFamily}`
+          ctx.fillStyle = textItem.color || '#FFFFFF'
+          ctx.strokeStyle = 'black'
+          ctx.lineWidth = 4
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+
+          ctx.strokeText(textItem.text, x, y)
+          ctx.fillText(textItem.text, x, y)
+        }
+        resolve(canvas)
+      }
+      img.onerror = (err) => reject(err)
+      img.src = imageSrc
+    })
+  }
+
+  const downloadMeme = async () => {
+    try {
+      if (!imageSrc) {
+        alert('Please select an image first!')
+        return
+      }
+
+      console.log('Starting meme download...')
+      const canvas = await generateMemeCanvas()
+      console.log(
+        'Canvas generated successfully:',
+        canvas.width,
+        'x',
+        canvas.height,
+      )
+
+      canvas.toBlob((blob) => {
+        if (blob) {
+          console.log('Blob created, size:', blob.size)
+
+          // Official MDN approach
+          const link = document.createElement('a')
+          link.href = URL.createObjectURL(blob)
+          link.download = `${filename}.png`
+          link.click()
+          URL.revokeObjectURL(link.href)
+
+          console.log('Download initiated')
+        } else {
+          console.error('Failed to create blob')
+          alert('Failed to create image. Please try again.')
+        }
+      }, 'image/png')
+    } catch (error) {
+      console.error('Error downloading meme:', error)
+      alert(`Failed to download meme: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
   }
 
   const textToEdit = texts.find((t) => t.id === editingTextId)
@@ -150,6 +363,7 @@ export function Editor() {
                     key={textItem.id}
                     textItem={textItem}
                     onDelete={deleteText}
+                    onUpdatePosition={updateTextPosition}
                   />
                 ))}
               </>
@@ -236,7 +450,7 @@ export function Editor() {
               <input
                 type='text'
                 value={textItem.text}
-                onChange={(e) =>
+                onInput={(e) =>
                   updateText(textItem.id, (e.target as HTMLInputElement).value)}
                 class='flex-grow input input-sm bg-white text-slate-800 placeholder-slate-400 border-slate-200 focus:border-cyan-400'
                 placeholder={`Text position ${index + 1}`}
@@ -270,6 +484,26 @@ export function Editor() {
           ))}
         </div>
 
+        {/* Filename input */}
+        <div class='form-control'>
+          <label class='label'>
+            <span class='label-text text-slate-800 font-medium'>Filename</span>
+          </label>
+          <input
+            type='text'
+            value={filename}
+            maxLength={20}
+            onInput={(e) => {
+              const newFilename = (e.target as HTMLInputElement).value
+              setFilename(newFilename)
+              // Save to localStorage
+              localStorage.setItem('memeEditor_filename', newFilename)
+            }}
+            class='input input-sm bg-white text-slate-800 border-slate-200 focus:border-cyan-400'
+            placeholder='Enter meme name (max 20 chars)'
+          />
+        </div>
+
         {/* Download button */}
         <div class='flex flex-col gap-3 mt-auto'>
           <button
@@ -290,36 +524,26 @@ export function Editor() {
                 d='M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
               />
             </svg>
-            Download
+            Download as {filename}.png
           </button>
         </div>
       </div>
 
       {/* Settings Modal */}
       {showSettings && textToEdit && (
-        <div class='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
-          <div class='bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto border border-slate-200 shadow-xl'>
-            <div class='flex justify-between items-center mb-4'>
+        <div
+          class='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 modal-backdrop'
+          onClick={handleModalClick}
+        >
+          <div
+            class='bg-white rounded-lg p-6 max-w-md w-full max-h-[80vh] overflow-y-auto border border-slate-200 shadow-xl'
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div class='mb-4'>
               <h3 class='text-xl font-bold text-slate-800'>Edit Text</h3>
-              <button
-                type='button'
-                onClick={closeSettings}
-                class='btn btn-ghost btn-sm text-slate-500 hover:text-slate-700'
-              >
-                <svg
-                  class='w-5 h-5'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
-                >
-                  <path
-                    stroke-linecap='round'
-                    stroke-linejoin='round'
-                    stroke-width='2'
-                    d='M6 18L18 6M6 6l12 12'
-                  />
-                </svg>
-              </button>
+              <p class='text-sm text-slate-500 mt-1'>
+                Press Esc or click outside to close
+              </p>
             </div>
 
             <div class='space-y-4'>
@@ -349,17 +573,53 @@ export function Editor() {
                 <label class='label'>
                   <span class='label-text text-slate-700'>Text Color</span>
                 </label>
-                <input
-                  type='color'
-                  value={textToEdit.color}
+                <div class='flex items-center gap-2'>
+                  <input
+                    type='color'
+                    value={textToEdit.color}
+                    onChange={(e) =>
+                      updateTextProperty(
+                        textToEdit.id,
+                        'color',
+                        (e.target as HTMLInputElement).value,
+                      )}
+                    class='w-12 h-10 rounded-lg border border-slate-300 cursor-pointer'
+                  />
+                  <input
+                    type='text'
+                    value={textToEdit.color}
+                    onChange={(e) =>
+                      updateTextProperty(
+                        textToEdit.id,
+                        'color',
+                        (e.target as HTMLInputElement).value,
+                      )}
+                    class='flex-grow input input-sm bg-white text-slate-800 border-slate-200 focus:border-cyan-400'
+                    placeholder='#FFFFFF'
+                  />
+                </div>
+              </div>
+
+              <div class='form-control'>
+                <label class='label'>
+                  <span class='label-text text-slate-700'>Font Family</span>
+                </label>
+                <select
+                  value={textToEdit.fontFamily}
                   onChange={(e) =>
                     updateTextProperty(
                       textToEdit.id,
-                      'color',
-                      (e.target as HTMLInputElement).value,
+                      'fontFamily',
+                      (e.target as HTMLSelectElement).value,
                     )}
-                  class='input input-bordered w-full h-12'
-                />
+                  class='select select-bordered bg-white text-slate-800 border-slate-200 focus:border-cyan-400'
+                >
+                  {availableFonts.map((font) => (
+                    <option key={font.value} value={font.value}>
+                      {font.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button
@@ -377,27 +637,82 @@ export function Editor() {
   )
 }
 
-function DraggableText({ textItem, onDelete }: {
+function DraggableText({ textItem, onDelete, onUpdatePosition }: {
   textItem: TextItem
   onDelete: (id: number) => void
+  onUpdatePosition: (id: number, x: number, y: number) => void
 }) {
-  const getPositionStyle = () => {
+  const [isDragging, setIsDragging] = useState(false)
+  const [position, setPosition] = useState(() => {
+    if (textItem.x !== undefined && textItem.y !== undefined) {
+      return { x: textItem.x, y: textItem.y }
+    }
     switch (textItem.position) {
       case 'top':
-        return { top: '10%', left: '50%' }
+        return { x: 50, y: 10 }
       case 'bottom':
-        return { top: '85%', left: '50%' }
+        return { x: 50, y: 85 }
       case 'center':
-        return { top: '50%', left: '50%' }
+        return { x: 50, y: 50 }
       default: {
         const _: never = textItem.position
-        return { top: '50%', left: '50%' }
+        return { x: 50, y: 50 }
       }
+    }
+  })
+
+  const handleMouseDown = (e: MouseEvent) => {
+    setIsDragging(true)
+    e.preventDefault()
+  }
+
+  const handleDeleteText = () => {
+    onDelete(textItem.id)
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return
+
+    const container = (e.target as HTMLElement).closest('.aspect-square')
+    if (!container) return
+
+    const rect = container.getBoundingClientRect()
+    const newX = ((e.clientX - rect.left) / rect.width) * 100
+    const newY = ((e.clientY - rect.top) / rect.height) * 100
+
+    const clampedX = Math.max(5, Math.min(95, newX))
+    const clampedY = Math.max(5, Math.min(95, newY))
+
+    setPosition({ x: clampedX, y: clampedY })
+  }
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      setIsDragging(false)
+      onUpdatePosition(textItem.id, position.x, position.y)
+    }
+  }
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove)
+        document.removeEventListener('mouseup', handleMouseUp)
+      }
+    }
+  }, [isDragging])
+
+  const getPositionStyle = () => {
+    return {
+      top: `${position.y}%`,
+      left: `${position.x}%`,
     }
   }
 
   const textStyle = {
-    fontFamily: 'Impact, sans-serif',
+    fontFamily: textItem.fontFamily,
     color: textItem.color,
     fontSize: `${textItem.fontSize}px`,
     textShadow:
@@ -410,11 +725,15 @@ function DraggableText({ textItem, onDelete }: {
 
   return (
     <div
-      class='absolute cursor-move group select-none'
+      class={`absolute group select-none ${
+        isDragging ? 'cursor-grabbing' : 'cursor-grab'
+      }`}
       style={{
         ...getPositionStyle(),
         transform: 'translate(-50%, -50%)',
       }}
+      data-text-id={textItem.id}
+      onMouseDown={handleMouseDown}
     >
       <div class='relative p-2'>
         <h1 style={textStyle}>
@@ -422,7 +741,7 @@ function DraggableText({ textItem, onDelete }: {
         </h1>
         <button
           type='button'
-          onClick={() => onDelete(textItem.id)}
+          onClick={handleDeleteText}
           class='absolute -top-2 -right-2 w-6 h-6 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs'
           title='Delete text'
         >

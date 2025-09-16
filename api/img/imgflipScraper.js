@@ -59,7 +59,7 @@ const isValidImageUrl = (url) => {
     const pathname = urlObj.pathname.toLowerCase()
 
     return validExtensions.some((ext) => pathname.includes(ext))
-  } catch (error) {
+  } catch (_error) {
     return false
   }
 }

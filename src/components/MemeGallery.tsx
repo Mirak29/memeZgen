@@ -154,7 +154,7 @@ function MemeCard({ meme }: { meme: MemeResult }) {
       class='bg-white rounded-lg overflow-hidden shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-300 transition-all duration-200 cursor-pointer w-full'
       onClick={() => {
         if (firstTemplate?.url) {
-          window.location.href = `/editor?template=${
+          globalThis.location.href = `/editor?template=${
             encodeURIComponent(firstTemplate.url)
           }`
         }
@@ -189,7 +189,7 @@ function UploadCard() {
     <div
       class='bg-white rounded-lg border border-dashed border-slate-300 hover:border-cyan-400 transition-colors cursor-pointer flex flex-col w-full items-center justify-center min-h-[280px] group'
       onClick={() => {
-        window.location.href = '/editor'
+        globalThis.location.href = '/editor'
       }}
     >
       <div class='flex flex-col items-center gap-3 text-slate-400 group-hover:text-cyan-600 transition-colors'>
