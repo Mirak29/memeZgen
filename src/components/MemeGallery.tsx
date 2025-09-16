@@ -154,7 +154,9 @@ function MemeCard({ meme }: { meme: MemeResult }) {
       class='bg-white rounded-lg overflow-hidden shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-300 transition-all duration-200 cursor-pointer w-full'
       onClick={() => {
         if (firstTemplate?.url) {
-          window.location.href = `/editor?template=${encodeURIComponent(firstTemplate.url)}`
+          window.location.href = `/editor?template=${
+            encodeURIComponent(firstTemplate.url)
+          }`
         }
       }}
     >
@@ -191,8 +193,18 @@ function UploadCard() {
       }}
     >
       <div class='flex flex-col items-center gap-3 text-slate-400 group-hover:text-cyan-600 transition-colors'>
-        <svg class='w-8 h-8' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-          <path stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M12 6v6m0 0v6m0-6h6m-6 0H6' />
+        <svg
+          class='w-8 h-8'
+          fill='none'
+          stroke='currentColor'
+          viewBox='0 0 24 24'
+        >
+          <path
+            stroke-linecap='round'
+            stroke-linejoin='round'
+            stroke-width='1.5'
+            d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+          />
         </svg>
         <span class='font-medium text-sm text-center'>Upload Your Image</span>
       </div>

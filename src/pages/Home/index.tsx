@@ -31,15 +31,19 @@ export function Home() {
       </main>
 
       {/* Meme Gallery */}
-      {searchQuery ? (
-        <div class='pb-8'>
-          <MemeGallery searchQuery={searchQuery} />
-        </div>
-      ) : (
-        <div class='flex items-center justify-center min-h-[200px] text-center'>
-          <p class='text-lg text-white/70'>Search for meme templates to get started</p>
-        </div>
-      )}
+      {searchQuery
+        ? (
+          <div class='pb-8'>
+            <MemeGallery searchQuery={searchQuery} />
+          </div>
+        )
+        : (
+          <div class='flex items-center justify-center min-h-[200px] text-center'>
+            <p class='text-lg text-white/70'>
+              Search for meme templates to get started
+            </p>
+          </div>
+        )}
     </div>
   )
 }

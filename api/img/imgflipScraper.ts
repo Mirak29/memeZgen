@@ -20,7 +20,11 @@ export interface SearchOptions {
  * Erreur personnalisée pour les opérations de scraping
  */
 export class ScrapingError extends Error {
-  constructor(message: string, public readonly code: string, public readonly statusCode?: number) {
+  constructor(
+    message: string,
+    public readonly code: string,
+    public readonly statusCode?: number,
+  ) {
     super(message)
     this.name = 'ScrapingError'
   }
@@ -59,14 +63,23 @@ const isValidImageUrl = (url: string): boolean => {
     const urlObj = new URL(url)
     const allowedDomains = ['imgflip.com', 'i.imgflip.com']
 
-    if (!allowedDomains.some(domain => urlObj.hostname.endsWith(domain))) {
+    if (!allowedDomains.some((domain) => urlObj.hostname.endsWith(domain))) {
       return false
     }
 
-    const validExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.mp4', '.webm', '.ogg']
+    const validExtensions = [
+      '.jpg',
+      '.jpeg',
+      '.png',
+      '.gif',
+      '.webp',
+      '.mp4',
+      '.webm',
+      '.ogg',
+    ]
     const pathname = urlObj.pathname.toLowerCase()
 
-    return validExtensions.some(ext => pathname.includes(ext))
+    return validExtensions.some((ext) => pathname.includes(ext))
   } catch {
     return false
   }
@@ -91,7 +104,10 @@ const chunkArray = <T>(array: T[], size: number): T[][] => {
  * Récupère les données d'un meme individuel avec parsing regex optimisé
  */
 const fetchMemeData = async (link: string): Promise<MemeResult | null> => {
-  if (!link || typeof link !== 'string' || !link.startsWith('https://imgflip.com/meme/')) {
+  if (
+    !link || typeof link !== 'string' ||
+    !link.startsWith('https://imgflip.com/meme/')
+  ) {
     throw new ScrapingError(`Invalid meme link: ${link}`, 'INVALID_LINK')
   }
 
@@ -99,7 +115,11 @@ const fetchMemeData = async (link: string): Promise<MemeResult | null> => {
     const response = await fetch(link)
 
     if (!response.ok) {
-      throw new ScrapingError(`HTTP ${response.status}: ${response.statusText}`, 'HTTP_ERROR', response.status)
+      throw new ScrapingError(
+        `HTTP ${response.status}: ${response.statusText}`,
+        'HTTP_ERROR',
+        response.status,
+      )
     }
 
     const htmlMeme = await response.text()
@@ -118,21 +138,24 @@ const fetchMemeData = async (link: string): Promise<MemeResult | null> => {
     let blankImg = ''
 
     // Stratégie 1: Template officiel
-    const TEMPLATE_REGEX = /<a[^>]*class="[^"]*meme-link[^"]*"[^>]*title="[^"]*Blank\s+Meme\s+Template[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i
+    const TEMPLATE_REGEX =
+      /<a[^>]*class="[^"]*meme-link[^"]*"[^>]*title="[^"]*Blank\s+Meme\s+Template[^"]*"[^>]*>[\s\S]*?<img[^>]*src="([^"]+)"/i
     const templateMatch = TEMPLATE_REGEX.exec(htmlMeme)
 
     if (templateMatch?.[1]) {
       blankImg = templateMatch[1]
     } else {
       // Stratégie 2: Image avec mots-clés
-      const IMG_KEYWORDS_REGEX = /<img[^>]*src="([^"]*(?:blank|template)[^"]*)"/i
+      const IMG_KEYWORDS_REGEX =
+        /<img[^>]*src="([^"]*(?:blank|template)[^"]*)"/i
       const imgMatch = IMG_KEYWORDS_REGEX.exec(htmlMeme)
 
       if (imgMatch?.[1]) {
         blankImg = imgMatch[1]
       } else {
         // Stratégie 3: Première image standard
-        const FALLBACK_REGEX = /<img[^>]*src="([^"]*\.(?:jpg|jpeg|png|gif|webp)(?:\?[^"]*)?[^"]*)"/i
+        const FALLBACK_REGEX =
+          /<img[^>]*src="([^"]*\.(?:jpg|jpeg|png|gif|webp)(?:\?[^"]*)?[^"]*)"/i
         const fallbackMatch = FALLBACK_REGEX.exec(htmlMeme)
 
         if (fallbackMatch?.[1]) {
@@ -157,13 +180,12 @@ const fetchMemeData = async (link: string): Promise<MemeResult | null> => {
         return {
           title,
           memeUrl: link,
-          blankImg: normalizedUrl
+          blankImg: normalizedUrl,
         }
       }
     }
 
     return null
-
   } catch (error) {
     if (error instanceof ScrapingError) {
       throw error
@@ -195,25 +217,36 @@ const extractMemeLinks = (html: string): string[] => {
 /**
  * Traite les liens de memes en parallèle
  */
-const processMemeLinksParallel = async (memeLinks: string[], options: SearchOptions = {}): Promise<MemeResult[]> => {
+const processMemeLinksParallel = async (
+  memeLinks: string[],
+  options: SearchOptions = {},
+): Promise<MemeResult[]> => {
   const { chunkSize = 12 } = options
   const chunks = chunkArray(memeLinks, chunkSize)
 
-  console.log(`⚡ Processing ${memeLinks.length} memes in ${chunks.length} chunks (${chunkSize}x concurrency)`)
+  console.log(
+    `⚡ Processing ${memeLinks.length} memes in ${chunks.length} chunks (${chunkSize}x concurrency)`,
+  )
 
   const chunkPromises = chunks.map(async (chunk, chunkIndex) => {
     try {
       const chunkResults = await Promise.all(
-        chunk.map(link =>
-          fetchMemeData(link).catch(err => {
+        chunk.map((link) =>
+          fetchMemeData(link).catch((err) => {
             console.warn(`⚠️  Failed to process: ${link} - ${err.message}`)
             return null
           })
-        )
+        ),
       )
 
-      const validMemes = chunkResults.filter((meme): meme is MemeResult => meme !== null)
-      console.log(`⚡ Chunk ${chunkIndex + 1}/${chunks.length}: ${validMemes.length}/${chunk.length} success`)
+      const validMemes = chunkResults.filter((meme): meme is MemeResult =>
+        meme !== null
+      )
+      console.log(
+        `⚡ Chunk ${
+          chunkIndex + 1
+        }/${chunks.length}: ${validMemes.length}/${chunk.length} success`,
+      )
 
       return validMemes
     } catch (error) {
@@ -232,7 +265,7 @@ const processMemeLinksParallel = async (memeLinks: string[], options: SearchOpti
 export async function searchMemes(
   query: string,
   page: number = 1,
-  options: SearchOptions = {}
+  options: SearchOptions = {},
 ): Promise<MemeResult[]> {
   // Validation stricte des types
   if (typeof query !== 'string') {
@@ -240,12 +273,16 @@ export async function searchMemes(
   }
 
   if (!Number.isInteger(page) || page < 1 || page > 100) {
-    throw new ScrapingError('Page must be an integer between 1 and 100', 'INVALID_PAGE')
+    throw new ScrapingError(
+      'Page must be an integer between 1 and 100',
+      'INVALID_PAGE',
+    )
   }
 
   const cleanQuery = query.trim()
   const encodedQuery = encodeURIComponent(cleanQuery)
-  const searchUrl = `https://imgflip.com/memesearch?q=${encodedQuery}&nsfw=on&page=${page}`
+  const searchUrl =
+    `https://imgflip.com/memesearch?q=${encodedQuery}&nsfw=on&page=${page}`
 
   try {
     console.log(`🔍 Searching: "${cleanQuery}" (page ${page})`)
@@ -253,13 +290,20 @@ export async function searchMemes(
     const response = await fetch(searchUrl)
 
     if (!response.ok) {
-      throw new ScrapingError(`Search failed: HTTP ${response.status}`, 'SEARCH_FAILED', response.status)
+      throw new ScrapingError(
+        `Search failed: HTTP ${response.status}`,
+        'SEARCH_FAILED',
+        response.status,
+      )
     }
 
     const html = await response.text()
 
     if (!html || html.length < 500) {
-      throw new ScrapingError('Invalid search results page', 'INVALID_SEARCH_PAGE')
+      throw new ScrapingError(
+        'Invalid search results page',
+        'INVALID_SEARCH_PAGE',
+      )
     }
 
     const memeLinks = extractMemeLinks(html)
@@ -273,9 +317,10 @@ export async function searchMemes(
 
     const memes = await processMemeLinksParallel(memeLinks, options)
 
-    console.log(`✅ Successfully processed ${memes.length}/${memeLinks.length} memes`)
+    console.log(
+      `✅ Successfully processed ${memes.length}/${memeLinks.length} memes`,
+    )
     return memes
-
   } catch (error) {
     if (error instanceof ScrapingError) {
       throw error
@@ -284,7 +329,7 @@ export async function searchMemes(
     console.error(`❌ Search failed for "${cleanQuery}":`, error)
     throw new ScrapingError(
       `Unexpected error during search: ${error}`,
-      'UNEXPECTED_ERROR'
+      'UNEXPECTED_ERROR',
     )
   }
 }
