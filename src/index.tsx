@@ -9,6 +9,7 @@ import {
 import { Home } from './pages/Home/index.tsx'
 import { Editor } from './pages/Editor/index.tsx'
 import { NotFound } from './pages/_404.tsx'
+import { Header } from './components/Header.tsx'
 import './style.css'
 
 export function App() {
@@ -26,15 +27,8 @@ export function App() {
 
         {/* Content */}
         <div className='relative z-10 w-full'>
-          {/* Site name */}
-          <div className='w-full max-w-6xl mx-auto px-4 pt-8 pb-4'>
-            <a
-              href='/'
-              className='text-2xl font-bold text-white hover:text-cyan-100 transition-colors inline-block'
-            >
-              MemeZgen
-            </a>
-          </div>
+          {/* Header with navigation */}
+          <Header />
 
           {/* Main content */}
           <main className='w-full max-w-6xl mx-auto px-4'>

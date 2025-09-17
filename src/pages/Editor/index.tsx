@@ -336,7 +336,11 @@ export function Editor() {
       }, 'image/png')
     } catch (error) {
       console.error('Error downloading meme:', error)
-      alert(`Failed to download meme: ${error instanceof Error ? error.message : 'Unknown error'}`)
+      alert(
+        `Failed to download meme: ${
+          error instanceof Error ? error.message : 'Unknown error'
+        }`,
+      )
     }
   }
 

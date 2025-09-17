@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import { searchMemes } from './img/imgflipScraper.js'
-import process from "node:process";
+import process from 'node:process'
 
 const app = express()
 const PORT = process.env.PORT || 3001
@@ -76,7 +76,7 @@ app.use(cors({
 app.use(express.json({ limit: '1mb' }))
 
 // Middleware de logging des requêtes
-app.use((req, res, next) => {
+app.use((req, _res, next) => {
   const timestamp = new Date().toISOString()
   console.log(`📥 ${timestamp} - ${req.method} ${req.path} - ${req.ip}`)
   next()

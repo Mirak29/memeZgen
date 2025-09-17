@@ -1,5 +1,21 @@
 import { useEffect, useState } from 'preact/hooks'
 
+type ApiMemeResult = {
+  title: string
+  memeUrl: string
+  blankImg: string
+}
+
+type ApiResponse = {
+  success: boolean
+  data: ApiMemeResult[]
+  source: string
+  responseTime: string
+  cached: boolean
+  query?: string
+  page?: number
+}
+
 type MemeResult = {
   title: string
   memeUrl: string
@@ -18,9 +34,12 @@ type SearchResult = {
 
 type MemeGalleryProps = {
   searchQuery: string
+  onLoadingChange?: (loading: boolean) => void
 }
 
-export function MemeGallery({ searchQuery }: MemeGalleryProps) {
+export function MemeGallery(
+  { searchQuery, onLoadingChange }: MemeGalleryProps,
+) {
   const [results, setResults] = useState<SearchResult | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -36,39 +55,58 @@ export function MemeGallery({ searchQuery }: MemeGalleryProps) {
 
   const loadMemes = async (query: string, page: number) => {
     setIsLoading(true)
+    onLoadingChange?.(true)
     setError(null)
 
     try {
-      // For now, simulate API call - will be replaced with actual scraper
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const response = await fetch(
+        `http://localhost:3001/api/search-memes?query=${
+          encodeURIComponent(query)
+        }&page=${page}`,
+      )
 
-      // Mock data for demonstration
-      const mockResults: SearchResult = {
-        memes: Array.from({ length: 12 }, (_, i) => ({
-          title: `${query} Meme ${i + 1}`,
-          memeUrl: `https://imgflip.com/meme/example-${i}`,
-          blankTemplates: [{
-            url: `https://i.imgflip.com/example-${i}.jpg`,
-            type: 'image' as const,
-          }],
-        })),
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+
+      const apiResponse: ApiResponse = await response.json()
+
+      if (!apiResponse.success) {
+        throw new Error('API returned error')
+      }
+
+      // Transform API response to our format
+      const transformedMemes: MemeResult[] = apiResponse.data.map((meme) => ({
+        title: meme.title,
+        memeUrl: meme.memeUrl,
+        blankTemplates: [{
+          url: meme.blankImg,
+          type: 'image' as const,
+        }],
+      }))
+
+      const newResults: SearchResult = {
+        memes: transformedMemes,
         currentPage: page,
-        hasNextPage: page < 3,
-        totalFound: 12,
+        hasNextPage: transformedMemes.length >= 10, // Assume more pages if we got 10+ results
+        totalFound: transformedMemes.length,
       }
 
       if (page === 1) {
-        setResults(mockResults)
+        setResults(newResults)
       } else if (results) {
         setResults({
-          ...mockResults,
-          memes: [...results.memes, ...mockResults.memes],
+          ...newResults,
+          memes: [...results.memes, ...transformedMemes],
+          totalFound: results.totalFound + transformedMemes.length,
         })
       }
-    } catch (_err) {
-      setError('Failed to load memes')
+    } catch (err) {
+      console.error('Failed to load memes:', err)
+      setError('Failed to load memes. Please try again.')
     } finally {
       setIsLoading(false)
+      onLoadingChange?.(false)
     }
   }
 
@@ -122,9 +160,6 @@ export function MemeGallery({ searchQuery }: MemeGalleryProps) {
       )}
 
       <div class='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 w-full'>
-        {/* Upload card */}
-        <UploadCard />
-
         {results?.memes.map((meme, index) => (
           <MemeCard key={`${meme.memeUrl}-${index}`} meme={meme} />
         ))}
@@ -149,17 +184,17 @@ export function MemeGallery({ searchQuery }: MemeGalleryProps) {
 function MemeCard({ meme }: { meme: MemeResult }) {
   const firstTemplate = meme.blankTemplates[0]
 
+  const handleEditClick = (e: Event) => {
+    e.stopPropagation()
+    if (firstTemplate?.url) {
+      globalThis.location.href = `/editor?template=${
+        encodeURIComponent(firstTemplate.url)
+      }`
+    }
+  }
+
   return (
-    <div
-      class='bg-white rounded-lg overflow-hidden shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-300 transition-all duration-200 cursor-pointer w-full'
-      onClick={() => {
-        if (firstTemplate?.url) {
-          globalThis.location.href = `/editor?template=${
-            encodeURIComponent(firstTemplate.url)
-          }`
-        }
-      }}
-    >
+    <div class='bg-white rounded-lg overflow-hidden shadow-sm border border-slate-200 hover:shadow-md hover:border-cyan-300 transition-all duration-200 w-full relative group'>
       {firstTemplate
         ? (
           <img
@@ -175,26 +210,15 @@ function MemeCard({ meme }: { meme: MemeResult }) {
           </div>
         )}
 
-      <div class='p-4'>
-        <h3 class='text-sm font-medium text-slate-700 text-center leading-tight'>
-          {meme.title}
-        </h3>
-      </div>
-    </div>
-  )
-}
-
-function UploadCard() {
-  return (
-    <div
-      class='bg-white rounded-lg border border-dashed border-slate-300 hover:border-cyan-400 transition-colors cursor-pointer flex flex-col w-full items-center justify-center min-h-[280px] group'
-      onClick={() => {
-        globalThis.location.href = '/editor'
-      }}
-    >
-      <div class='flex flex-col items-center gap-3 text-slate-400 group-hover:text-cyan-600 transition-colors'>
+      {/* Edit button overlay */}
+      <button
+        type='button'
+        class='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full p-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200 shadow-lg'
+        onClick={handleEditClick}
+        title='Edit meme'
+      >
         <svg
-          class='w-8 h-8'
+          class='w-6 h-6'
           fill='none'
           stroke='currentColor'
           viewBox='0 0 24 24'
@@ -202,11 +226,16 @@ function UploadCard() {
           <path
             stroke-linecap='round'
             stroke-linejoin='round'
-            stroke-width='1.5'
-            d='M12 6v6m0 0v6m0-6h6m-6 0H6'
+            stroke-width='2'
+            d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
           />
         </svg>
-        <span class='font-medium text-sm text-center'>Upload Your Image</span>
+      </button>
+
+      <div class='p-4'>
+        <h3 class='text-sm font-medium text-slate-700 text-center leading-tight'>
+          {meme.title}
+        </h3>
       </div>
     </div>
   )

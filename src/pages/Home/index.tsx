@@ -1,15 +1,28 @@
-import { useState } from 'preact/hooks'
+import { useEffect, useState } from 'preact/hooks'
 import { SearchBar } from '../../components/SearchBar.tsx'
 import { MemeGallery } from '../../components/MemeGallery.tsx'
 
 export function Home() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isSearching, setIsSearching] = useState(false)
+  const [searchQuery, setSearchQuery] = useState(() => {
+    if (typeof globalThis !== 'undefined' && globalThis.localStorage) {
+      return globalThis.localStorage.getItem('home-search-query') || ''
+    }
+    return ''
+  })
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    if (typeof globalThis !== 'undefined' && globalThis.localStorage) {
+      globalThis.localStorage.setItem('home-search-query', searchQuery)
+    }
+  }, [searchQuery])
 
   const handleSearch = (query: string) => {
-    setIsSearching(true)
     setSearchQuery(query)
-    setTimeout(() => setIsSearching(false), 500)
+  }
+
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading)
   }
 
   return (
@@ -26,7 +39,11 @@ export function Home() {
         </div>
 
         <div class='relative w-full max-w-md'>
-          <SearchBar onSearch={handleSearch} isLoading={isSearching} />
+          <SearchBar
+            onSearch={handleSearch}
+            isLoading={isLoading}
+            value={searchQuery}
+          />
         </div>
       </main>
 
@@ -34,7 +51,10 @@ export function Home() {
       {searchQuery
         ? (
           <div class='pb-8'>
-            <MemeGallery searchQuery={searchQuery} />
+            <MemeGallery
+              searchQuery={searchQuery}
+              onLoadingChange={handleLoadingChange}
+            />
           </div>
         )
         : (
