@@ -7,11 +7,11 @@ const indexHtml = await Deno.readFile(
 const htmlContent = { headers: { 'Content-Type': 'text/html' } }
 const serveDirOpts = { fsRoot: import.meta.dirname + '/web/dist' }
 
-Deno.serve((req) => {
+Deno.serve(async (req) => {
   const { pathname } = new URL(req.url)
 
   if (pathname.startsWith('/api/')) {
-    return apiServer.fetch(req)
+    return await apiServer.fetch(req)
   }
 
   if (pathname.includes('.')) {

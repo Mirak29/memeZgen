@@ -60,7 +60,7 @@ export function MemeGallery(
 
     try {
       const response = await fetch(
-        `http://localhost:3001/api/search-memes?query=${
+        `/api/search-memes?query=${
           encodeURIComponent(query)
         }&page=${page}`,
       )
