@@ -48,6 +48,6 @@ if (typeof window !== 'undefined') {
   hydrate(<App />, document.getElementById('app')!)
 }
 
-export async function prerender(_data: unknown) {
-  return await ssr(<App />)
+export function prerender(_data: unknown) {
+  return ssr(<App />)
 }
