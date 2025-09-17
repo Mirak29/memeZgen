@@ -67,7 +67,7 @@ export function Header() {
         </div>
         <a href='/' class='btn btn-ghost text-xl'>
           <img
-            src='/assets/meme.png'
+            src='/meme.png'
             alt='MemeZgen Logo'
             class='w-8 h-8 mr-2'
           />
