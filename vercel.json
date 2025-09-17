@@ -1,17 +1,9 @@
 {
-  "builds": [
-    {
-      "src": "package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
-    },
-    {
-      "src": "api/server.ts",
-      "use": "@vercel/deno"
+  "functions": {
+    "api/server.ts": {
+      "runtime": "deno"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/api/(.*)",
