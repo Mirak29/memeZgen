@@ -2,14 +2,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "build:css": "npx @tailwindcss/cli -i src/style.css -o public/output.css",
-    "preview": "vite preview",
-    "lint": "deno lint",
-    "check": "deno check src/index.tsx",
-    "fmt": "deno fmt",
-    "fmt:check": "deno fmt --check"
+    "dev": "deno task dev",
+    "build": "deno task build",
+    "preview": "deno task preview",
+    "lint": "deno task lint",
+    "check": "deno task check",
+    "fmt": "deno task fmt"
   },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.13",
