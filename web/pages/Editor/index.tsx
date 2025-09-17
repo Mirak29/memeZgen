@@ -282,8 +282,7 @@ export function Editor() {
           }
 
           const x = (xPercent / 100) * canvas.width
-          // Invert Y coordinate to match CSS positioning
-          const y = canvas.height - (yPercent / 100) * canvas.height
+          const y = (yPercent / 100) * canvas.height
 
           ctx.font = `${textItem.fontSize || 40}px ${textItem.fontFamily}`
           ctx.fillStyle = textItem.color || '#FFFFFF'
