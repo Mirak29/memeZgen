@@ -65,7 +65,14 @@ export function Header() {
             </li>
           </ul>
         </div>
-        <a href='/' class='btn btn-ghost text-xl'>MemeZgen</a>
+        <a href='/' class='btn btn-ghost text-xl'>
+          <img
+            src='/assets/meme.png'
+            alt='MemeZgen Logo'
+            class='w-8 h-8 mr-2'
+          />
+          MemeZgen
+        </a>
       </div>
       <div class='navbar-center hidden lg:flex'>
         <div class='flex gap-2'>
