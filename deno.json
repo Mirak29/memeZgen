@@ -12,7 +12,8 @@
   },
   "lint": {
     "rules": {
-      "tags": ["recommended"]
+      "tags": ["recommended"],
+      "exclude": ["no-unversioned-import"]
     }
   },
   "tasks": {
@@ -23,7 +24,7 @@
     "vite": "deno run -A tasks/vite.ts",
     "dev:back": "deno serve --port 3001 --allow-env --allow-net api/server.ts",
     "dev": "deno run --allow-all dev.ts",
-    "build": "npm run build",
+    "build": "deno run -A npm:vite build",
     "preview": "deno run --allow-env --allow-sys --allow-read --allow-write --allow-net --allow-run --allow-ffi npm:vite preview"
   }
 }
