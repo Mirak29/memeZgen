@@ -60,9 +60,7 @@ export function MemeGallery(
 
     try {
       const response = await fetch(
-        `/api/search-memes?query=${
-          encodeURIComponent(query)
-        }&page=${page}`,
+        `/api/search-memes?query=${encodeURIComponent(query)}&page=${page}`,
       )
 
       if (!response.ok) {
