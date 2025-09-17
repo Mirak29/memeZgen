@@ -17,7 +17,7 @@
   },
   "tasks": {
     "lint": "deno lint",
-    "check": "deno check src/**/*.tsx",
+    "check": "deno check web api tasks",
     "fmt": "deno fmt",
     "fmt:check": "deno fmt --check",
     "vite": "deno run -A tasks/vite.ts",

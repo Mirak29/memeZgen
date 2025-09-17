@@ -49,7 +49,7 @@ const getImgflipApiMemes = async (): Promise<MemeData[]> => {
     console.log(`✅ Retrieved ${memes.length} popular memes from API`)
     return memes
   } catch (error) {
-    console.error('❌ Imgflip API error:', error.message)
+    console.error('❌ Imgflip API error:', error)
     return []
   }
 }
@@ -147,7 +147,7 @@ export default async function handler(req: Request): Promise<Response> {
       )
     } catch (error) {
       const responseTime = Date.now() - startTime
-      console.error(`❌ Search error (${responseTime}ms):`, error.message)
+      console.error(`❌ Search error (${responseTime}ms):`, error)
 
       return new Response(
         JSON.stringify({

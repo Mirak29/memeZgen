@@ -1,4 +1,4 @@
-import { searchMemes } from './imgflipScraper.js'
+import { searchMemes } from './imgflipScraper.ts'
 
 console.log('=== Test Page 1 ===')
 const memes1 = await searchMemes('cat', 1)
