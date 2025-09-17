@@ -10,6 +10,7 @@ import { Home } from './pages/Home/index.tsx'
 import { Editor } from './pages/Editor/index.tsx'
 import { NotFound } from './pages/_404.tsx'
 import { Header } from './components/Header.tsx'
+import { ScrollToTop } from './components/ScrollToTop.tsx'
 import './style.css'
 
 export function App() {
@@ -39,6 +40,9 @@ export function App() {
             </Router>
           </main>
         </div>
+
+        {/* Scroll to top button */}
+        <ScrollToTop />
       </div>
     </LocationProvider>
   )
