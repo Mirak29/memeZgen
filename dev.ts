@@ -56,6 +56,7 @@ const frontendProcess = new Deno.Command('deno', {
     '--allow-write',
     '--allow-net',
     '--allow-run',
+    '--allow-ffi',
     'npm:vite',
   ],
   stdout: 'piped',

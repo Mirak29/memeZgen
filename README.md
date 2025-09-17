@@ -52,7 +52,7 @@ Project configured for Vercel with:
 
 ```bash
 # Build for Vercel
-deno task build
+npm task build
 
 # Deploy
 vercel --prod

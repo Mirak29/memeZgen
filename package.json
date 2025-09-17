@@ -3,8 +3,8 @@
   "type": "module",
   "scripts": {
     "dev": "deno task dev",
-    "build": "deno task build",
-    "preview": "deno task preview",
+    "build": "vite build",
+    "preview": "vite preview",
     "lint": "deno task lint",
     "check": "deno task check",
     "fmt": "deno task fmt"
