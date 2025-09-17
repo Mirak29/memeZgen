@@ -20,7 +20,7 @@
     "check": "deno check src/**/*.tsx",
     "fmt": "deno fmt",
     "fmt:check": "deno fmt --check",
-    "dev:front": "deno run --allow-env --allow-sys --allow-read --allow-write --allow-net --allow-run --allow-ffi npm:vite",
+    "vite": "deno run -A tasks/vite.ts",
     "dev:back": "deno serve --port 3001 --allow-env --allow-net api/server.ts",
     "dev": "deno run --allow-all dev.ts",
     "build": "npm run build",
